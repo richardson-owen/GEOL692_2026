@@ -12,6 +12,11 @@ knitr::opts_chunk$set(echo = TRUE,
                       out.width = "100%")
 ```
 
+```{r}
+source("setup.R")
+```
+
+
 ```{r load libraries, warning=FALSE, message=FALSE}
 library(tidyverse)
 library(plotly)
