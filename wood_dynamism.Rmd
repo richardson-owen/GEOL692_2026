@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       out.width = "100%")
 ```
 
+<<<<<<< HEAD
 ```{r load libraries, message = FALSE}
 # Adding a packageLoad function within the script "setup.R" because I didn't have all of these downloaded
 # Add additional packages within the script, or just use the library function. Sorry to make this complicated
@@ -78,37 +79,34 @@ plot settings
 wood_colors = c("LW_Channel" = "#99C5B5", "no_LW_Channel" = "#BEA57D")
 ```
 
-# visualizing distribution of response metrics 
+# visualizing distribution of values 
 
 support for the response values is positive & continuous
-none of the response values are normally distributed - may require transformation?
+none of the response values are normally distributed - justifies generalized linear model with gamma family and log link
 
-support for the predictor is between 0 and 1 (proportion)
-the predictor follows a negative binomial (?) distribution
-
-```{r simple response value plots}
-data_byyr %>% 
+```{r simple value density plots}
+data_byyr %>%
+  filter(site_reach != "Rock_WA_2no_LW_Channel") %>% 
   ggplot(aes(x=sinuosity)) +
   geom_density() 
 
 data_byyr %>% 
+  filter(site_reach != "Rock_WA_2no_LW_Channel") %>% 
   ggplot(aes(x=complexity)) +
   geom_density()
 
-data_byyr %>% 
-  ggplot(aes(x=sdi)) +
-  geom_density() 
-
-data_byyr %>% 
+data_byyr %>%
+  filter(site_reach != "Rock_WA_2no_LW_Channel") %>% 
   ggplot(aes(x=ratio_accum_to_ch_area)) +
   geom_density() 
 
-data_byyr %>%  
+data_byyr %>% 
+  filter(site_reach != "Rock_WA_2no_LW_Channel") %>% 
   ggplot(aes(x=piece_per_100m)) +
   geom_density() 
 ```
 
-## stage 1: wood as a response to site, reach, & time
+## wood vs. site, reach, & time
 ```{r wood v time plots}
 # how does standardized wood (the ratio of wood accumulation to channel area) change over time?
 data_byyr %>%
@@ -147,13 +145,18 @@ data_byyr %>%
 ```
 ```{r simple wood site plots}
 ##### wood values by site by year #####
-data_byyr %>% 
+data_byyr %>% # Cleaned up this plot a bit
   ggplot(aes(x = year, y = ratio_accum_to_ch_area, color = reach)) +
-  geom_point() +
+  geom_point(size = 2) +
   geom_line(aes(group = site_reach)) +
   facet_wrap(~site) +
-  scale_color_manual(values = wood_colors) +
-  theme(legend.position = "none") 
+  scale_color_manual(values = wood_colors,
+          name = "Reach Type",
+          labels = c("Large Wood", "Control")) +
+  labs(y = "Wood accumulation : Channel area ratio") + 
+  theme(legend.position = "right",
+        panel.grid = element_blank())+
+    theme_bw() 
 
 data_byyr %>% 
   ggplot(aes(x = year, y = piece_per_100m, color = reach)) +
@@ -177,7 +180,7 @@ dynamism_data %>%
 ```
 
 
-## stage 2: how do sinuosity, complexity, and sdi change as a function of standardized wood?
+## sinuosity, complexity, and sdi vs. standardized wood
 
 visualizing relationship between response v predictor (ratio_accum_to_ch_area)
 within a site the relationship is linear-ish? 
@@ -192,10 +195,10 @@ data_byyr %>%
   geom_point() +
   geom_line(aes(group=site))
 
-data_byyr %>% 
-  ggplot(aes(x=ratio_accum_to_ch_area, y=sdi, color = site, shape = reach)) +
-  geom_point() +
-  geom_line(aes(group=site))
+# data_byyr %>% 
+#   ggplot(aes(x=ratio_accum_to_ch_area, y=sdi, color = site, shape = reach)) +
+#   geom_point() +
+#   geom_line(aes(group=site))
 
 
 ## wood piece_per_100m
@@ -209,10 +212,10 @@ data_byyr %>%
   geom_point() +
   geom_line(aes(group=site))
 
-data_byyr %>% 
-  ggplot(aes(x=piece_per_100m, y=sdi, color = site, shape = reach)) +
-  geom_point() +
-  geom_line(aes(group=site))
+# data_byyr %>% 
+#   ggplot(aes(x=piece_per_100m, y=sdi, color = site, shape = reach)) +
+#   geom_point() +
+#   geom_line(aes(group=site))
 ```
 
 channel values by site
@@ -250,12 +253,12 @@ data_byyr %>%
   facet_wrap(~site) +
   scale_color_manual(values = wood_colors)
 
-data_byyr %>% 
-  ggplot(aes(x = year, y = sdi, color = reach)) +
-  geom_point() +
-  geom_line(aes(group = site_reach)) +
-  facet_wrap(~site) +
-  scale_color_manual(values = wood_colors)
+# data_byyr %>% 
+#   ggplot(aes(x = year, y = sdi, color = reach)) +
+#   geom_point() +
+#   geom_line(aes(group = site_reach)) +
+#   facet_wrap(~site) +
+#   scale_color_manual(values = wood_colors)
 
 # all_data_byyr %>% 
 #   ggplot(aes(x = year_to, y = net_change, color = reach)) +
@@ -281,21 +284,42 @@ data_byyr %>%
 
 dynamism values by site
 ```{r simple dynamism plots}
+
+library(rcartocolor)
+rcartocolor::display_carto_all()
+
 ##### Sinuosity vs both mean wood metrics #####
 p1 <- dynamism_data %>%
   ggplot(aes(x = avg_wood_pieces_per100m, y = sinuosity_dynamism, color = site)) +
-  geom_point(aes(shape = reach)) +
+  geom_point(aes(shape = reach), size = 3) +
+    scale_color_carto_d(palette = "Earth") +
+    scale_shape_manual(
+      values = c(16, 17),
+      labels = c("Large Wood", "Control"),
+      name = "Reach Type") +
   geom_line(aes(group = site), color = "black", alpha = 0.5) +
   theme_bw() + 
   theme(legend.position = "none") +
-  labs(x = "Avg. Wood Pieces per 100m", y = "Sinuosity Dynamism")
+  labs(x = "Avg. Wood Pieces per 100m", 
+       y = "Sinuosity Dynamism",
+       color = "Site",
+       shape = "Reach Type")
 
 p2 <- dynamism_data %>%
   ggplot(aes(x = mean_wood_accum_per_area, y = sinuosity_dynamism, color = site)) +
-  geom_point(aes(shape = reach)) +
+  geom_point(aes(shape = reach), size = 3) +
+    scale_color_carto_d(palette = "Earth") +
+    scale_shape_manual(
+    values = c(16, 17),
+    labels = c("Large Wood", "Control"),
+    name = "Reach Type") +
   geom_line(aes(group = site), color = "black", alpha = 0.5) +
   theme_bw() +
-  labs(x = "Avg. Wood Acculumations per Area", y = "")
+  theme(legend.position = "right") +
+  labs(x = "Avg. Wood Acculumations per Area", 
+       y = "",
+       color = "Site",
+       shape = "Reach Type")
 
 (p1 + p2) +
   plot_annotation(title = "Sinuosity Dynamism vs. Avg Wood Metrics")
@@ -304,7 +328,7 @@ p2 <- dynamism_data %>%
 ##### Complexity vs both mean wood metrics #####
 p1 <- dynamism_data %>%
   ggplot(aes(x = avg_wood_pieces_per100m, y = complexity_dynamism, color = site)) +
-  geom_point(aes(shape = reach)) +
+  geom_point(aes(shape = reach), size = 3) +
   geom_line(aes(group = site), color = "black", alpha = 0.5) +
   theme_bw() + 
   theme(legend.position = "none") +
@@ -312,7 +336,7 @@ p1 <- dynamism_data %>%
 
 p2 <- dynamism_data %>%
   ggplot(aes(x = mean_wood_accum_per_area, y = complexity_dynamism, color = site)) +
-  geom_point(aes(shape = reach)) +
+  geom_point(aes(shape = reach),size = 3) +
   geom_line(aes(group = site), color = "black", alpha = 0.5) +
   theme_bw() +
   labs(x = "Avg. Wood Acculumations per Area", y = "")
@@ -324,7 +348,7 @@ p2 <- dynamism_data %>%
 ##### SDI vs both mean wood metrics #####
 p1 <- dynamism_data %>%
   ggplot(aes(x = avg_wood_pieces_per100m, y = sdi_dynamism, color = site)) +
-  geom_point(aes(shape = reach)) +
+  geom_point(aes(shape = reach), size = 3) +
   geom_line(aes(group = site), color = "black", alpha = 0.5) +
   theme_bw() + 
   theme(legend.position = "none") +
@@ -332,7 +356,7 @@ p1 <- dynamism_data %>%
 
 p2 <- dynamism_data %>%
   ggplot(aes(x = mean_wood_accum_per_area, y = sdi_dynamism, color = site)) +
-  geom_point(aes(shape = reach)) +
+  geom_point(aes(shape = reach), size = 3) +
   geom_line(aes(group = site), color = "black", alpha = 0.5) +
   theme_bw() +
   labs(x = "Avg. Wood Acculumations per Area", y = "")
@@ -344,7 +368,7 @@ p2 <- dynamism_data %>%
 ##### Net change vs both mean wood metrics #####
 p1 <- dynamism_data %>%
   ggplot(aes(x = avg_wood_pieces_per100m, y = net_change_dynamism, color = site)) +
-  geom_point(aes(shape = reach)) +
+  geom_point(aes(shape = reach), size = 3) +
   geom_line(aes(group = site), color = "black", alpha = 0.5) +
   theme_bw() + 
   theme(legend.position = "none") +
@@ -352,7 +376,7 @@ p1 <- dynamism_data %>%
 
 p2 <- dynamism_data %>%
   ggplot(aes(x = mean_wood_accum_per_area, y = net_change_dynamism, color = site)) +
-  geom_point(aes(shape = reach)) +
+  geom_point(aes(shape = reach), size = 3) +
   geom_line(aes(group = site), color = "black", alpha = 0.5) +
   theme_bw() +
   labs(x = "Avg. Wood Acculumations per Area", y = "")
@@ -360,6 +384,165 @@ p2 <- dynamism_data %>%
 (p1 + p2) +
   plot_annotation(title = "Net Change Dynamism vs. Avg Wood Metrics")
 ##### end
+```
+```{r simple dynamism plots PART 2 MEGA PANEL}
+##### Sinuosity vs both mean wood metrics #####
+p1 <- dynamism_data %>%
+  ggplot(aes(x = avg_wood_pieces_per100m, y = sinuosity_dynamism, color = site)) +
+  geom_point(aes(shape = reach), size = 3) +
+    scale_color_carto_d(palette = "Earth") +
+    scale_shape_manual(
+      values = c(16, 17),
+      labels = c("Large Wood", "Control"),
+      name = "Reach Type") +
+  geom_line(aes(group = site), color = "black", alpha = 0.5) +
+  theme_bw() + 
+  theme(legend.position = "none") +
+  labs(x = "", 
+       y = "Sinuosity",
+       color = "Site",
+       shape = "Reach Type")
+
+p2 <- dynamism_data %>%
+  ggplot(aes(x = mean_wood_accum_per_area, y = sinuosity_dynamism, color = site)) +
+  geom_point(aes(shape = reach), size = 3) +
+    scale_color_carto_d(palette = "Earth") +
+    scale_shape_manual(
+    values = c(16, 17),
+    labels = c("Large Wood", "Control"),
+    name = "Reach Type") +
+  geom_line(aes(group = site), color = "black", alpha = 0.5) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(x = "", 
+       y = "",
+       color = "Site",
+       shape = "Reach Type")
+
+sinuosity <- (p1 + p2) +
+  plot_annotation(title = "Sinuosity Dynamism vs. Avg Wood Metrics")
+##### end 
+
+##### Complexity vs both mean wood metrics #####
+p3 <- dynamism_data %>%
+  ggplot(aes(x = avg_wood_pieces_per100m, y = complexity_dynamism, color = site)) +
+  geom_point(aes(shape = reach), size = 3) +
+    scale_color_carto_d(palette = "Earth") +
+    scale_shape_manual(
+      values = c(16, 17),
+      labels = c("Large Wood", "Control"),
+      name = "Reach Type") +
+  geom_line(aes(group = site), color = "black", alpha = 0.5) +
+  theme_bw() + 
+  theme(legend.position = "none") +
+  labs(x = "", 
+       y = "Complexity",
+       color = "Site",
+       shape = "Reach Type")
+
+p4 <- dynamism_data %>%
+  ggplot(aes(x = mean_wood_accum_per_area, y = complexity_dynamism, color = site)) +
+  geom_point(aes(shape = reach), size = 3) +
+    scale_color_carto_d(palette = "Earth") +
+    scale_shape_manual(
+    values = c(16, 17),
+    labels = c("Large Wood", "Control"),
+    name = "Reach Type") +
+  geom_line(aes(group = site), color = "black", alpha = 0.5) +
+  theme_bw() +
+  theme(legend.position = "right") +
+  labs(x = "", 
+       y = "",
+       color = "Site",
+       shape = "Reach Type")
+
+complexity <- (p3 + p4) +
+  plot_annotation(title = "Complexity Dynamism vs. Avg Wood Metrics")
+##### end
+
+##### SDI vs both mean wood metrics #####
+p5 <- dynamism_data %>%
+  ggplot(aes(x = avg_wood_pieces_per100m, y = sdi_dynamism, color = site)) +
+  geom_point(aes(shape = reach), size = 3) +
+    scale_color_carto_d(palette = "Earth") +
+    scale_shape_manual(
+      values = c(16, 17),
+      labels = c("Large Wood", "Control"),
+      name = "Reach Type") +
+  geom_line(aes(group = site), color = "black", alpha = 0.5) +
+  theme_bw() + 
+  theme(legend.position = "none") +
+  labs(x = "", 
+       y = "SDI",
+       color = "Site",
+       shape = "Reach Type")
+
+p6 <- dynamism_data %>%
+  ggplot(aes(x = mean_wood_accum_per_area, y = sdi_dynamism, color = site)) +
+  geom_point(aes(shape = reach), size = 3) +
+    scale_color_carto_d(palette = "Earth") +
+    scale_shape_manual(
+    values = c(16, 17),
+    labels = c("Large Wood", "Control"),
+    name = "Reach Type") +
+  geom_line(aes(group = site), color = "black", alpha = 0.5) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(x = "", 
+       y = "",
+       color = "Site",
+       shape = "Reach Type")
+
+sdi <- (p5 + p6) +
+  plot_annotation(title = "SDI Dynamism vs. Avg Wood Metrics")
+##### end
+
+##### Net change vs both mean wood metrics #####
+p7 <- dynamism_data %>%
+  ggplot(aes(x = avg_wood_pieces_per100m, y = net_change_dynamism, color = site)) +
+  geom_point(aes(shape = reach), size = 3) +
+    scale_color_carto_d(palette = "Earth") +
+    scale_shape_manual(
+      values = c(16, 17),
+      labels = c("Large Wood", "Control"),
+      name = "Reach Type") +
+  geom_line(aes(group = site), color = "black", alpha = 0.5) +
+  theme_bw() + 
+  theme(legend.position = "none") +
+  labs(x = "Avg. Wood Pieces per 100m", 
+       y = "Net Change",
+       color = "Site",
+       shape = "Reach Type")
+
+p8 <- dynamism_data %>%
+  ggplot(aes(x = mean_wood_accum_per_area, y = net_change_dynamism, color = site)) +
+  geom_point(aes(shape = reach), size = 3) +
+    scale_color_carto_d(palette = "Earth") +
+    scale_shape_manual(
+    values = c(16, 17),
+    labels = c("Large Wood", "Control"),
+    name = "Reach Type") +
+  geom_line(aes(group = site), color = "black", alpha = 0.5) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(x = "Avg. Wood Acculumations per Area", 
+       y = "",
+       color = "Site",
+       shape = "Reach Type")
+
+netdyno <- (p7 + p8) +
+  plot_annotation(title = "Net Change vs. Avg Wood Metrics")
+
+
+# Patching together
+(p1 + p2 +
+ p3 + p4 +
+ p5 + p6 +
+ p7 + p8) +
+  plot_layout(ncol = 2) +
+  plot_annotation(title = "Dynamism vs. Avg Wood Metrics")
+##### end
+
 ```
 
 ```{r simple dynamism plots pt. 2}
@@ -637,20 +820,18 @@ meanwoodaccum_samex <- ggplot(
 
 ggpairs uses the pearson correlation test by default
 ```{r correlation plot test}
-# ggpairs uses pearson cor test by default 
 data_byyr %>%
+  filter(site_reach != "Rock_WA_2no_LW_Channel") %>% 
   dplyr::select(sinuosity, complexity, sdi, channel_length, channel_area, accum_area, ratio_accum_to_ch_area, wood_pieces, piece_per_100m) %>% 
   ggpairs(progress = F)
 
 dynamism_data %>% 
+  filter(site_reach != "Rock_WA_2no_LW_Channel") %>% 
   dplyr::select(sinuosity_dynamism, complexity_dynamism, sdi_dynamism, net_change_dynamism, avg_wood_pieces_per100m, mean_wood_accum_per_area) %>% 
   ggpairs(progress = F)
 ```
 
 # Models
-
-"random effects should reflect the design, but complexity should be justified by the amount of information available"
-experimental design is such that reaches are nested within sites to account for multiple observations (across years) at reach_site combinations 
 
 ```{r create model df}
 mod_data_byyr <- data_byyr %>% 
@@ -663,57 +844,224 @@ mod_data_byyr <- data_byyr %>%
          year_c = scale(year, # centers years around a mean (set to 0) value for year, makes for a more interpretable effect
                         center = TRUE, scale = FALSE)) %>% 
   filter(site_reach != "Rock_WA_2no_LW_Channel") %>% 
-  mutate(site = str_replace_all(site, "_[:digit:]$", ""))
+  mutate(site = str_replace_all(site, "_[:digit:]$", "")) %>% 
+  mutate(site = factor(site))
 ```
 
-## modeling notes
-- AICc is preferred for small sample sizes which is when the number of data points / number of parameters < 40 (n/k < 40). we have 126 observations, which for the null model means we're not in the small sample size world (k=3), but for all other models we are because we have to estimate at least 4 parameters. it's good to use the same criteria across models so we'll use AICc for all. the aictab function in the AICcmodavg does this for us.  
-- all of our response variables are not normally distributed so we're using a generalized linear mixed model with a Gamma family and log link unless otherwise stated
+## specify models
 
-## models for sinuosity
-```{r specify sinuosity candidate model}
-## null model: random effect of site only reflects hierarchical design 
-# this will estimate a random intercept of sinuosity for every site (i.e. mean sinuosity per site)
-null_sin <- glmer(sinuosity ~ (1|site), mod_data_byyr, family = Gamma(link = "log"))
+notes
+- "random effects should reflect the design, but complexity should be justified by the amount of information available"
+- all of our response variables are not normally distributed so we're using a generalized linear mixed model with either a Gamma family(log link) or a gaussian family(log link). 
 
-## models with scaled ratio of wood accumulation
-m1_sin <- glmer(sinuosity ~ ratio_accum_scaled + (1|site), mod_data_byyr, family = Gamma(link = "log"))
-m2_sin <- glmer(sinuosity ~ piece_100m_scaled + (1|site), mod_data_byyr, family = Gamma(link = "log"))
+- null model: random effect of site only reflects hierarchical design 
+  - this will estimate a random intercept of sinuosity for every site (i.e. mean sinuosity per site)
 
-m3_sin <- glmer(sinuosity ~ ratio_accum_scaled + piece_100m_scaled + (1|site), mod_data_byyr, family = Gamma(link = "log"))
-m4_sin <- glmer(sinuosity ~ ratio_accum_scaled * piece_100m_scaled + (1|site), mod_data_byyr, family = Gamma(link = "log"))
+- alt models test effect of scaled ratio of wood accumulation
+  - alt model 1 uses a gamma log link
+    - m1 <- glmer(sinuosity ~ ratio_accum_scaled + (1|site), mod_data_byyr, family = Gamma(link = "log"))
+  - alt model 2 uses a gaussian log link
+    - m2 <- glmer(sinuosity ~ ratio_accum_scaled + (1|site), mod_data_byyr, family = gaussian(link = "log"))
 
-## models with more complicated random effects structure
-# these calculate both a random intercept and a random slope within a site
-# which on second thought I don't think we actually want 
-# because sites are considered a "random" sample of the global population of sites 
-# and we're interested in the effect of wood across this global population of sites, not within sites?
-m5_sin <- glmer(sinuosity ~ ratio_accum_scaled + (1 + ratio_accum_scaled|site), mod_data_byyr, family = Gamma(link = "log"))
-m6_sin <- glmer(sinuosity ~ piece_100m_scaled + (1 + piece_100m_scaled|site), mod_data_byyr, family = Gamma(link = "log"))
+- we considered models with more complicated random effects structure that estimated both a random intercept and a random slope within a site; however, on second thought we realized we didn't need them because sites are considered a "random" sample of the global population of sites and we're interested in the effect of wood across this global population of sites, not within sites
 
-m7_sin <- glmer(sinuosity ~ ratio_accum_scaled + piece_100m_scaled + (1 + ratio_accum_scaled|site), mod_data_byyr, family = Gamma(link = "log"))
-m8_sin <- glmer(sinuosity ~ ratio_accum_scaled * piece_100m_scaled + (1 + ratio_accum_scaled|site), mod_data_byyr, family = Gamma(link = "log"))
-m9_sin <- glmer(sinuosity ~ ratio_accum_scaled + piece_100m_scaled + (1 + piece_100m_scaled|site), mod_data_byyr, family = Gamma(link = "log"))
-m10_sin <- glmer(sinuosity ~ ratio_accum_scaled * piece_100m_scaled + (1 + piece_100m_scaled|site), mod_data_byyr, family = Gamma(link = "log"))
+```{r specify all models together}
+responses <- c("sinuosity", "complexity")
 
-# full candidate set of models
-# currently does not include the more complicated random effect structure
-cand.set <- list(null_sin, m1_sin, m2_sin, m3_sin, m4_sin)
+fit_candidates <- function(response, data) {
+  list(
+    null = glmer(reformulate("(1|site)", response), 
+                 data, family = Gamma("log")),
+    m1   = glmer(reformulate("ratio_accum_scaled + (1|site)", response), 
+                 data, family = Gamma("log")),
+    m2   = glmer(reformulate("ratio_accum_scaled + (1|site)", response), 
+                 data, family = gaussian("log"))
+  )
+}
+
+models <- map(set_names(responses), fit_candidates, data = mod_data_byyr)
+```
+
+## model selection using AICc
+- model selection: AICc is preferred for small sample sizes which is when the number of data points / number of parameters < 40 (n/k < 40). we have 126 observations, which for the null model means we're not in the small sample size world (k=3), but for all other models we are because we have to estimate at least 4 parameters. it's good to use the same criteria across models so we'll use AICc for all. the aictab function in the AICcmodavg does this for us.
+```{r model selection}
+# m1 is the top model for sinuosity
+AICcmodavg::aictab(models$sinuosity)
+# m2 is the top model for complexity 
+AICcmodavg::aictab(models$complexity)
+
+# look at the top model summaries
+## these estimates are on the log scale
+summary(models$sinuosity$m1)
+summary(models$complexity$m2)
+
+## these are both on the log scale
+#tab_model(models$sinuosity$m1) 
+#tab_model(models$complexity$m2) 
+```
+
+## obtain estimates on original response scale
+still working on this section
+```{r top model estimates}
+emmeans(models$sinuosity$m1, ~ ratio_accum_scaled, type = "response")
 
 ```
 
-```{r DHARMa checks for candidate sinuosity models}
+
+## plot model predictions
+```{r plot sinuosity model predictions}
+# sinuosity : top model is m1, then m2, then null
+
+## prediction plots for m1 (top model)
+plot(
+  ggpredict(
+    models$sinuosity$m1, terms = c("ratio_accum_scaled", "site"), type = "random", bias_correction = TRUE
+    )
+  ) +
+  geom_point(
+    data = mod_data_byyr,
+    aes(x = ratio_accum_scaled, y = sinuosity, color = site),
+    alpha = 0.5, inherit.aes = FALSE
+  ) +
+  labs(title = "m1 predicted & observed values of sinuosity")
+
+## predicition plots for m2
+plot(
+  ggpredict(
+    models$sinuosity$m2, terms = c("ratio_accum_scaled", "site"), type = "random", bias_correction = TRUE
+    )
+  ) +
+  geom_point(
+    data = mod_data_byyr,
+    aes(x = ratio_accum_scaled, y = sinuosity, color = site),
+    alpha = 0.5, inherit.aes = FALSE
+  ) +
+  labs(title = "m2 predicted & observed values of sinuosity")
+
+## prediction plots for the null model 
+
+null_sin_pred_df <- as.data.frame(ggpredict(
+    models$sinuosity$null, terms = c("site"), type = "random", bias_correction = TRUE
+    )
+) %>% 
+  rename(site = x)
+
+ggplot() +
+  geom_point( # observed points
+    data = mod_data_byyr,
+    aes(x = site, y = sinuosity, color = site), alpha = 0.7
+  ) +
+  geom_boxplot( # observed means and sd
+    data = mod_data_byyr,
+    aes(x = site, y = sinuosity, fill = site, color = site), alpha = 0.5
+  ) +
+  geom_point( # predicted means
+    data = null_sin_pred_df,
+    aes(x = site, y = predicted),
+    color = "black"
+    ) +
+  geom_errorbar( # predicted upper and lower 95% CIs
+    data = null_sin_pred_df,
+    aes(x = site, ymin = conf.low, ymax = conf.high), 
+    color = "black"
+    ) +
+  labs(title = "null predicted & observed values of sinuosity")
+```
+
+```{r plot complexity model predictions}
+# complexity : top model is m2, then null, then m1
+
+## prediction plots for m2 (top model)
+plot(
+  ggpredict(
+    models$complexity$m2, terms = c("ratio_accum_scaled", "site"), type = "random", bias_correction = TRUE
+    )
+  ) +
+  geom_point(
+    data = mod_data_byyr,
+    aes(x = ratio_accum_scaled, y = complexity, color = site),
+    alpha = 0.5, inherit.aes = FALSE
+  ) +
+  labs(title = "m2 predicted & observed values of complexity")
+
+
+## prediction plots for the null model 
+
+null_comp_pred_df <- as.data.frame(ggpredict(
+    models$complexity$null, terms = c("site"), type = "random", bias_correction = TRUE
+    )
+) %>% 
+  rename(site = x)
+
+ggplot() +
+  geom_point( # observed points
+    data = mod_data_byyr,
+    aes(x = site, y = complexity, color = site), alpha = 0.7
+  ) +
+  geom_boxplot( # observed means and sd
+    data = mod_data_byyr,
+    aes(x = site, y = complexity, fill = site, color = site), alpha = 0.5
+  ) +
+  geom_point( # predicted means
+    data = null_comp_pred_df,
+    aes(x = site, y = predicted),
+    color = "black"
+    ) +
+  geom_errorbar( # predicted upper and lower 95% CIs
+    data = null_comp_pred_df,
+    aes(x = site, ymin = conf.low, ymax = conf.high), 
+    color = "black"
+    ) +
+  labs(title = "null predicted & observed values of complexity") 
+  
+  
+## complexity m1 predictions
+plot(
+  ggpredict(
+    models$complexity$m1, terms = c("ratio_accum_scaled", "site"), type = "random", bias_correction = TRUE
+    )
+  ) +
+  geom_point(
+    data = mod_data_byyr,
+    aes(x = ratio_accum_scaled, y = complexity, color = site),
+    alpha = 0.5, inherit.aes = FALSE
+  ) +
+  labs(title = "m1 predicted & observed values of complexity") 
+
+```
+
 ## model diagnostics with DHARMa & performance packages
-# Plot simulated residuals: (QQ-plot for distribution, Residual vs. Predicted for variance)
-sim_resids <- purrr::map(cand.set, 
+```{r DHARMa checks for candidate models}
+# simulate residuals for sinuosity
+sim_resids_sin <- purrr::map(models$sinuosity, 
                          ~DHARMa::simulateResiduals(fittedModel = .x), 
                          .progress = FALSE)
 
-# plotting QQ plot and predicted vs residuals
-# obviously, the predicted vs residuals plots look a lil weird
-purrr::map(sim_resids, 
+# Plot simulated residuals: (QQ-plot for distribution, Residual vs. Predicted for variance)
+purrr::map(sim_resids_sin, 
            ~plot(.x, quantreg = FALSE),
            .progress = FALSE)
+
+# simulate residuals for complexity 
+sim_resids_comp <- purrr::map(models$complexity, 
+                         ~DHARMa::simulateResiduals(fittedModel = .x), 
+                         .progress = FALSE)
+
+# Plot simulated residuals: (QQ-plot for distribution, Residual vs. Predicted for variance)
+purrr::map(sim_resids_comp, 
+           ~plot(.x, quantreg = FALSE),
+           .progress = FALSE)
+```
+
+```{r performance checks for candidate models}
+# plots various model assumptions (normality of residuals, normality of random effects, linear relationship, homogeneity of variance, multicollinearity).
+# some of the models have flat-ish reference lines for homogeneity of variance
+purrr::map(models$sinuosity, ~performance::check_model(.x))
+purrr::map(models$complexity, ~performance::check_model(.x))
+```
+## residual plots
+```{r residual plots for sinuosity}
+sim_resids <- sim_resids_sin
 
 # recalc residuals aggregated by site
 recal_sim_resids <- purrr::map(sim_resids, 
@@ -724,7 +1072,7 @@ recal_sim_resids <- purrr::map(sim_resids,
 # makes for a low sample size of residuals 
 #purrr::map(recal_sim_resids, ~plot(.x, quantreg = FALSE))
 
-# plotting just residuals, 
+# plotting just residuals
 
 resid_df <- map2_dfr(
   sim_resids,
@@ -738,9 +1086,7 @@ resid_df <- map2_dfr(
   mutate(model = case_when(
     model == "1" ~ "null_sin",
     model == "2" ~ "m1_sin",
-    model == "3" ~ "m2_sin",
-    model == "4" ~ "m3_sin",
-    model == "5" ~ "m4_sin"
+    model == "3" ~ "m2_sin"
   ))
 
 recal_resid_df <- map2_dfr(
@@ -761,89 +1107,73 @@ recal_resid_df <- map2_dfr(
   ))
 
 ggplot(resid_df, aes(index, residual, color = model)) +
-  geom_point() 
+  geom_point() +
+  labs(title = "sinuosity residuals")
 
 ggplot(recal_resid_df, aes(site, residual, color = model)) +
-  geom_point() 
+  geom_point() +
+  labs(title = "sinuosity aggregated residuals")
 ```
 
-```{r performance checks for candidate sinuosity models}
-# plots various model assumptions (normality of residuals, normality of random effects, linear relationship, homogeneity of variance, multicollinearity).
-# some of the models have flat-ish reference lines for homogeneity of variance
-performance::check_model(null_sin)
-performance::check_model(m1_sin)
-performance::check_model(m2_sin)
-performance::check_model(m3_sin)
-performance::check_model(m4_sin)
+```{r residual plots for complexity}
+sim_resids <- sim_resids_comp
 
-# acting unstable for some reason, think the plots are too mem heavy for map
-# purrr::map(cand.set, ~performance::check_model(.x))
-```
+# recalc residuals aggregated by site
+recal_sim_resids <- purrr::map(sim_resids, 
+                               ~DHARMa::recalculateResiduals(.x, group = ~site),
+                               .progress = FALSE)
 
-```{r sinuosity model selection}
-AICcmodavg::aictab(cand.set, modnames = c("null_sim","m1_sin","m2_sin","m3_sin", "m4_sin"))
+# plotting QQ plot and predicted vs residuals aggregated by site
+# makes for a low sample size of residuals 
+#purrr::map(recal_sim_resids, ~plot(.x, quantreg = FALSE))
 
-tab_model(m1_sin)
-```
+# plotting just residuals
 
-```{r plot top sinuosity model predictions}
-# ## plot the null model
-# # create plotting df with our sampled and estimated site means
-# plot_null_sin <- mod_data_byyr %>% 
-#   group_by(site) %>% 
-#   summarize(sampled = mean(sinuosity)) %>% 
-#   mutate(estimated = exp(coef(null_sin)$site$"(Intercept)"))
-# 
-# # solid lines are sampled means, dashed lines are estimated means
-# ggplot(mod_data_byyr) +
-#   geom_point(aes(x = ratio_accum_scaled, y = sinuosity, color = site)) +
-#   geom_hline(aes(yintercept = sampled, color = site), plot_null_sin) +
-#   geom_hline(aes(yintercept = estimated, color = site), plot_null_sin, linetype = "dashed") 
-
-# plot model predictions example
-plot(
-  ggpredict(
-    m1_sin, terms = c("ratio_accum_scaled", "site"), type = "random", bias_correction = TRUE
-    )
-  ) +
-  geom_point(
-    data = mod_data_byyr,
-    aes(x = ratio_accum_scaled, y = sinuosity, color = site),
-    alpha = 0.5, inherit.aes = FALSE
-  ) +
-  labs(title = "predicted & observed values of sinuosity")
-
-```
-
-## models 
-```{r specify all models together possibly}
-responses <- c("sinuosity", "complexity", "sdi")
-
-fit_candidates <- function(response, data) {
-  list(
-    null = glmer(reformulate("(1|site)", response), 
-                 data, family = Gamma("log")),
-    m1   = glmer(reformulate("ratio_accum_scaled + (1|site)", response), 
-                 data, family = Gamma("log")),
-    m2   = glmer(reformulate("piece_100m_scaled + (1|site)", response), 
-                 data, family = Gamma("log")),
-    m3   = glmer(reformulate("ratio_accum_scaled + piece_100m_scaled + (1|site)", response), 
-                 data, family = Gamma("log")),
-    m4   = glmer(reformulate("ratio_accum_scaled * piece_100m_scaled + (1|site)", response), 
-                 data, family = Gamma("log"))
+resid_df <- map2_dfr(
+  sim_resids,
+  paste0(seq_along(sim_resids)),
+  ~ tibble(
+    model = .y,
+    index = seq_along(residuals(.x)),
+    residual = residuals(.x)
   )
-}
+) %>% 
+  mutate(model = case_when(
+    model == "1" ~ "null_sin",
+    model == "2" ~ "m1_sin",
+    model == "3" ~ "m2_sin"
+  ))
 
-models <- map(set_names(responses), fit_candidates, data = mod_data_byyr)
+recal_resid_df <- map2_dfr(
+  recal_sim_resids,
+  paste0(seq_along(recal_sim_resids)),
+  ~ tibble(
+    model = .y,
+    site = seq_along(residuals(.x)),
+    residual = residuals(.x)
+  )
+) %>% 
+  mutate(model = case_when(
+    model == "1" ~ "null_sin",
+    model == "2" ~ "m1_sin",
+    model == "3" ~ "m2_sin",
+    model == "4" ~ "m3_sin",
+    model == "5" ~ "m4_sin"
+  ))
 
-AICcmodavg::aictab(models$sinuosity)
-AICcmodavg::aictab(models$complexity)
-AICcmodavg::aictab(models$sdi)
+ggplot(resid_df, aes(index, residual, color = model)) +
+  geom_point() +
+  labs(title = "complexity residuals")
+
+ggplot(recal_resid_df, aes(site, residual, color = model)) +
+  geom_point() +
+  labs(title = "complexity aggregated residuals")
 ```
-
 
 
 ## stage 3: sensitivity
 
 it could be good to ask whether our results change with the period of record we use (i.e. the imagery quality)
 especially if we think the quality of wood data drastically improves in a given period
+
+shayla can make a plot for this 
