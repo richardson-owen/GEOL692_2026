@@ -12,20 +12,19 @@ knitr::opts_chunk$set(echo = TRUE,
                       out.width = "100%")
 ```
 
-```{r load libraries, warning=FALSE, message=FALSE}
-library(tidyverse)
-library(plotly)
-library(patchwork)
-library(GGally)
-library(lme4)
-library(DHARMa)
-library(lmerTest)
-library(performance)
-library(MASS)
-library(see)
-library(AICcmodavg)
-library(ggeffects)
-library(sjPlot)
+```{r load libraries, message = FALSE}
+# Adding a packageLoad function within the script "setup.R" because I didn't have all of these downloaded
+# Add additional packages within the script, or just use the library function. Sorry to make this complicated
+# - Shayla
+source("setup.R")
+```
+
+```{r everyone load data, message = FALSE}
+# this chunk should just work for everyone when you open the project. I copied the data into a subfolder called data within this project, but in case it doesn't work I left Noel and Kelley's load chunks below
+
+dynamism_data <- read_csv("data/site_metrics_07022026.csv")
+data_byyr <- read_csv("data/SelectMetricsByYear_07022026.csv") 
+all_data_byyr <- read.csv("data/ALL_metrics_07022026.csv") 
 ```
 
 ```{r kelley load data, message = FALSE}
@@ -44,6 +43,7 @@ dynamism_data <- read_csv(file.path(data_dir, "Metrics/site_metrics_07022026.csv
 data_byyr <- read_csv(file.path(data_dir, "/Metrics/SelectMetricsByYear_07022026.csv"))
 all_data_byyr <- read.csv(file.path(data_dir, "/Metrics/ALL_metrics_07022026.csv"))
 ```
+
 
 ```{r clean loaded data}
 ## this should work after you run the right version of data loading above
